@@ -36,7 +36,7 @@
         android:layout_marginTop="76dp" />
 
     <ListView
-        android:id="@+id/list"
+        android:id="@android:id/list"
         android:layout_width="300dp"
         android:layout_height="match_parent"
         android:layout_below="@+id/textView"

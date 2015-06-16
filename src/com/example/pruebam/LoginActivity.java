@@ -1,5 +1,8 @@
 package com.example.pruebam;
 
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -108,7 +111,13 @@ public class LoginActivity extends Activity {
 				// Put Http parameter password with value of Password Edit Value control
 				params.put("password", password);
 				// Invoke RESTful Web Service with Http parameters
-				invokeWS(params);
+				try {
+					invokeWS(params);
+					
+				} catch (Exception e) {
+					// TODO: handle exception
+				}
+				
 			} 
 			// When Email is invalid
 			else{
@@ -133,8 +142,13 @@ public class LoginActivity extends Activity {
 	
 	public void invokeWS(RequestParams params){
 		// Show Progress Dialog
-		
+		try {
 			prgDialog.show();
+			
+		} catch (Exception e) {
+			// TODO: handle exception
+		}
+			
 			
 		
 		 // Make RESTful webservice call using AsyncHttpClient object
@@ -166,7 +180,7 @@ public class LoginActivity extends Activity {
                              //////////////
                              //BD
                              ContentValues nuevoRegistro = new ContentValues();
-                             nuevoRegistro.put("codigo", password);
+                             nuevoRegistro.put("codigo", cryptWithMD5(password));
                              nuevoRegistro.put("nombre", email);
                              db.insert("Usuarios", null, nuevoRegistro);
 
@@ -211,7 +225,7 @@ public class LoginActivity extends Activity {
                              String con = c.getString(0);
 
                              
-							if(email.equals(nom) && password.equals(con)){
+							if(email.equals(nom) && cryptWithMD5(password).equals(con)){
 
                                  
 
@@ -256,6 +270,27 @@ public class LoginActivity extends Activity {
 		homeIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
 		startActivity(homeIntent);
 	}
+	
+	private static MessageDigest md;
+
+	   public String cryptWithMD5(String pass){
+	    try {
+	        md = MessageDigest.getInstance("MD5");
+	        byte[] passBytes = pass.getBytes();
+	        md.reset();
+	        byte[] digested = md.digest(passBytes);
+	        StringBuffer sb = new StringBuffer();
+	        for(int i=0;i<digested.length;i++){
+	            sb.append(Integer.toHexString(0xff & digested[i]));
+	        }
+	        return sb.toString();
+	    } catch (NoSuchAlgorithmException ex) {
+	    	Toast.makeText(getApplicationContext(), "Fallo en contraseña", Toast.LENGTH_SHORT).show();
+	    }
+	        return null;
+
+
+	   }
 	
 
 	

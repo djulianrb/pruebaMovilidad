@@ -1,39 +1,54 @@
 package com.example.pruebam;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.net.URL;
-import java.net.URLConnection;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
-import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.ListActivity;
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.support.v4.widget.DrawerLayout;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.KeyEvent;
-import android.view.Menu;
+
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.ListAdapter;
 import android.widget.ListView;
+import android.widget.SimpleAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
 
 
-public class InicioActivity extends Activity {
+public class InicioActivity extends ListActivity {
 	
 	//LISTJSON
+	private Context context;
+	private static String url = "http://mapsgoogle.herobo.com/prueba.json";
+
+	private static final String TAG_VTYPE = "id";
+	private static final String TAG_VCOLOR = "name";
+	private static final String TAG_FUEL = "surname";
+	private static final String TAG_TREAD = "telephone";
+	private static final String TAG_OPERATOR = "approvedOperators";
+	private static final String TAG_NAME = "name";
+	private static final String TAG_POINTS = "experiencePoints";
+
+	ArrayList<HashMap<String, String>> jsonlist = new ArrayList<HashMap<String, String>>();
 	
+	ListView lv ;
 	
 	//LISTJSON
 	 
@@ -59,6 +74,9 @@ public class InicioActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_inicio);
         
+       
+        
+        new ProgressTask(InicioActivity.this).execute();
      
 
         prefs = getSharedPreferences(PREFERENCE_NAME, 0);
@@ -70,6 +88,8 @@ public class InicioActivity extends Activity {
 
          ListView listView = (ListView) findViewById(R.id.list_view);
          DrawerLayout drawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
+         
+         lv = (ListView)findViewById(android.R.id.list);
 
         listView.setAdapter(new ArrayAdapter<Object>(this,
                 android.R.layout.simple_list_item_1, android.R.id.text1,
@@ -183,7 +203,89 @@ public class InicioActivity extends Activity {
     
     
     ///////////////
-    
+    private class ProgressTask extends AsyncTask<String, Void, Boolean> {
+		private ProgressDialog dialog;
+
+		private ListActivity activity;
+
+		// private List<Message> messages;
+		public ProgressTask(ListActivity activity) {
+			this.activity = activity;
+			context = activity;
+			dialog = new ProgressDialog(context);
+		}
+
+		/** progress dialog to show user that the backup is processing. */
+
+		/** application context. */
+		//private Context context;
+
+		protected void onPreExecute() {
+			this.dialog.setMessage("Progress start");
+			this.dialog.show();
+		}
+
+		@Override
+		protected void onPostExecute(final Boolean success) {
+			if (dialog.isShowing()) {
+				dialog.dismiss();
+			}
+			ListAdapter adapter = new SimpleAdapter(context, jsonlist,
+					R.layout.list_item, new String[] { TAG_VTYPE, TAG_VCOLOR,
+							TAG_FUEL, TAG_TREAD }, new int[] {
+							R.id.vehicleType, R.id.vehicleColor, R.id.fuel,
+							R.id.treadType });
+			
+			setListAdapter(adapter);
+
+			// selecting single ListView item
+			 lv = getListView();
+			
+		}
+
+		protected Boolean doInBackground(final String... args) {
+			try {
+				
+				com.example.JSONInicio.JSONParser jParser = new com.example.JSONInicio.JSONParser();
+
+				// getting JSON string from URL
+				JSONArray json = jParser.getJSONFromUrl(url);
+
+				for (int i = 0; i < json.length(); i++) {
+
+					try {
+						JSONObject c = json.getJSONObject(i);
+						String vtype = c.getString(TAG_VTYPE);
+
+						String vcolor = c.getString(TAG_VCOLOR);
+						String vfuel = c.getString(TAG_FUEL);
+						String vtread = c.getString(TAG_TREAD);
+
+						HashMap<String, String> map = new HashMap<String, String>();
+
+						// adding each child node to HashMap key => value
+						map.put(TAG_VTYPE, vtype);
+						map.put(TAG_VCOLOR, vcolor);
+						map.put(TAG_FUEL, vfuel);
+						map.put(TAG_TREAD, vtread);
+						jsonlist.add(map);
+					} catch (JSONException e) {
+						// TODO Auto-generated catch block
+						Toast.makeText(getApplicationContext(), "NO SE PUDO CARGAR LA LISTA DE PROSPECTOS", Toast.LENGTH_LONG).show();
+					}
+				}
+
+
+				
+			} catch (Exception e) {
+				// TODO: handle exception
+			}
+			return null;
+			
+
+		}
+
+	}
 
 
 
